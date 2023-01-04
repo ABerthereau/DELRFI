@@ -10,6 +10,7 @@ from tensorflow.python.keras import backend
 from tensorflow.python.keras import backend as K
 
 #Adapted from the tensorflow code
+
 class ConfusionMatrixMetric(tf.keras.metrics.Metric):
     """
         Compute the mean intersection over union metrics based on Tensorflow
@@ -73,6 +74,7 @@ class ConfusionMatrixMetric(tf.keras.metrics.Metric):
         Outputs:
             Update op.
         """
+        #change made here v 
         y_pred = tf.argmax(y_pred, axis=-1)
         y_pred = y_pred[..., tf.newaxis]
 
