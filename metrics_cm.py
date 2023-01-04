@@ -9,7 +9,7 @@ from tensorflow.python.keras.utils import metrics_utils
 from tensorflow.python.keras import backend
 from tensorflow.python.keras import backend as K
 
-#use this class vv to create recall and stuff like that (cm matrix with true positif and stuff like that)
+#Adapted from the tensorflow code
 class ConfusionMatrixMetric(tf.keras.metrics.Metric):
     """
         Compute the mean intersection over union metrics based on Tensorflow
