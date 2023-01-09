@@ -251,23 +251,4 @@ def _input_shape(img):
         new_img[:height, :width, :] = img
     return new_img
 
-def _normalize(filename, pftsub):
-        """
-        Normalize the image sub integration time.
-            Inputs:
-                - filename : str - path to the array
-                - pftsub : pandas datafram - contains tsub value for all obs.
-            Output:
-                - img : array - float normalized numpy array
-        """
-        arr = np.load(filename)
-        name = filename.split('/')[-1]
-        name = name.split('.npy')[0]
-        #print(name)
-        tsub = pftsub.loc[pftsub['filename'] == name+'.ar']['tsub'].values
-        if tsub.size != 0:
-            img = arr / float(tsub)
-        #input_image = tf.cast(input_image, tf.float64) / 255.0
-        return img
-
 
