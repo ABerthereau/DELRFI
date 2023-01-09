@@ -7,8 +7,6 @@ from os import listdir
 from scipy.stats import median_absolute_deviation as mad
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import statistics as sts
-from sklearn.preprocessing import MinMaxScaler
-import pandas as ps
 import os
 
 
