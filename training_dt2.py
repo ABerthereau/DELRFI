@@ -1,3 +1,7 @@
+###########################################
+####  Script used to run the training  ####
+###########################################
+
 import numpy as np
 import tensorflow as tf
 from IPython.display import clear_output
@@ -12,7 +16,7 @@ from callbacks import DisplayCallback
 from metrics_cm import ConfusionMatrixMetric
 
 
-
+# simple way to add weight to class
 def add_sample_w(img,label):
     cw = tf.constant([1.0, 3.0])
     cw = cw/tf.reduce_sum(cw)
