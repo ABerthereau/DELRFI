@@ -1,7 +1,5 @@
 import tensorflow as tf
 from typing import Optional, Union, Callable, List
-#import tensorflow_datasets as tfds
-#tfds.disable_progress_bar()
 from callbacks import DisplayCallback
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2,preprocess_input
 from tensorflow.keras.layers import Input,GlobalMaxPooling2D,Dense,Conv2D, Conv2DTranspose, MaxPool2D
@@ -16,13 +14,22 @@ def _downstack(inputs_shape: Optional[tuple] = (None,None,3),
                n_classes: int = 2):
     """
     Download the pre-trained MobileNetV2 layers to be used as downstack for the U-net model.
-    Inputs:
-        -inputs_shape: tuple - shape of the input image.
-        -alpha: float - between 0 and 1. controls the width of the network. alpha < 1.0 proportionnaly decreases the number
-        of filters, alpha > 1.0 increases the number of filters in each layer.
-        -n_classes: integer - number of classe to classify
-    Ouputs:
-        -down_stack: list - contains the layer of MobileNetV2 used for downsampling.
+    
+    Parameters
+    ----------
+    
+    inputs_shape: tuple, optional
+      shape of the input image.
+    alpha: float, optional
+      between 0 and 1. controls the width of the network. alpha < 1.0 proportionnaly decreases the number of filters, alpha > 1.0 increases the number of filters in each layer.
+    n_classes: integer, optional
+      number of classe to classify
+    
+    Returns
+    -------
+        
+    down_stack: list, optional
+      contains the layer of MobileNetV2 used for downsampling.
     """
 
     inputs_ = Input(shape=inputs_shape)
@@ -46,9 +53,12 @@ def _downstack(inputs_shape: Optional[tuple] = (None,None,3),
 
 def _upstack():
     """
-        Download and use the pix2pix pre-trained model as upstack for U-net model.
-        Outputs:
-            -up_stack: list - contains the layer used to upsample by 2D transpose convolution.
+    Download and use the pix2pix pre-trained model as upstack for U-net model.
+    Returns
+    -------
+       
+    up_stack: list
+      contains the layer used to upsample by 2D transpose convolution.
     """
     up_stack = [
        upsample(512, 3),  # 4x4 -> 8x8
@@ -60,15 +70,27 @@ def _upstack():
     return up_stack
 
 def upsample(filters, size, norm_type='batchnorm', apply_dropout=False):
-  """Upsamples an input.
+  """
+  FROM TENSORFLOW
+  Upsamples an input.
   Conv2DTranspose => Batchnorm => Dropout => Relu
-  Inputs:
-    filters: number of filters
-    size: filter size
-    norm_type: Normalization type; either 'batchnorm' or 'instancenorm'.
-    apply_dropout: If True, adds the dropout layer
-  Ouputs:
-    Upsample Sequential Model
+  
+  Parameters
+  ----------
+  
+  filters: int
+    number of filters
+  size: int
+    filter size
+  norm_type: str, optional
+    Normalization type; either 'batchnorm' or 'instancenorm'.
+  apply_dropout: boolean, optional
+    If True, adds the dropout layer
+  
+  Returns
+  -------
+  
+  Upsample Sequential Model
   """
 
   initializer = tf.random_normal_initializer(0., 0.02)
@@ -100,17 +122,28 @@ def build_model(inputs_shape : Optional[tuple] = (None,None,3),
                 metrics: List[Union[str, Callable]] = "accuracy",
                 loss: List[Union[str,Callable]]=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)):
     """
-        Build the U-net model based on pre-trained MobileNetV2 downsample layers and pix2pix upsample layers.
-        Inputs:
-            -inputs_shape: tuple - shape of the input image.
-            -alpha: float - between 0 and 1. controls the width of the network. alpha < 1.0 proportionnaly decreases the number
-            of filters, alpha > 1.0 increases the number of filters in each layer.
-            -n_classes: integer - number of classe to classify
-            -padding: str - either "same" or "valid" (case insensitive)
-            -optimizer: str - String (name of optimizer) or optimizer instance. See tf.keras.optimizers.
-            -metrics: list - contains metrics to be evaluated by the model during training and testing. Each of this can be a string (name of a built-in function), function or a tf.keras.metrics.Metric instance. See tf.keras.metrics.
-        Ouputs:
-            -model : Tensorflow model.
+    Build the U-net model based on pre-trained MobileNetV2 downsample layers and pix2pix upsample layers.
+    
+    Parameters
+    ----------
+     
+    inputs_shape: tuple, optional
+      shape of the input image.
+    alpha: float, optional 
+      between 0 and 1. controls the width of the network. alpha < 1.0 proportionnaly decreases the number of filters, alpha > 1.0 increases the number of filters in each layer.
+    n_classes: integer, optional 
+      number of classe to classify
+    padding: str, optional 
+      either "same" or "valid" (case insensitive)
+    optimizer: str, optional
+      string (name of optimizer) or optimizer instance. See tf.keras.optimizers.
+    metrics: list, optional
+      contains metrics to be evaluated by the model during training and testing. Each of this can be a string (name of a built-in function), function or a tf.keras.metrics.Metric instance. See tf.keras.metrics.
+    
+    Returns
+    -------
+    
+    model : Tensorflow model.
     """
 
     inputs_ = Input(shape=inputs_shape)
