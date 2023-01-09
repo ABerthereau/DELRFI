@@ -15,13 +15,24 @@ import os
 def output_shape(img,
                  shapes: Tuple[int,...]):
          """
-            Put the input image into the shape of [Nx,Ny,:].
-            Inputs:
-                -img: array
-                -Nx: integer - dimension along the X-axis
-                -Ny: integer - dimension along the Y-axis
-            Outputs:
-                -img[:Nx,:Ny,:]: array
+         Put the input image into the shape of [Nx,Ny,:].
+         
+         Parameters
+         ----------
+         
+         img: array
+          the image to process
+         Nx: integer
+          dimension along the X-axis
+         Ny: integer
+          dimension along the Y-axis
+          
+          
+          Returns
+          -------
+          
+          img : array
+            the processed array of shape [:Nx,:Ny,:]
          """
          padded_shape = (*[((img.shape[i]-shapes[i])//2, ((img.shape[i]-shapes[i])//2) + ((img.shape[i]-shapes[i])%2)) for i in range(2)], (0,0))
          Nx =  padded_shape[0]
@@ -31,21 +42,35 @@ def output_shape(img,
 
 def create_mask(pred_mask):
     """
-        Create an mask array using the two labels image.
-        Inputs:
-            - pred_mask: arrays - n_classes arrays predicted by the model
-        Outputs:
-            - pred_mask[0]: array - array containing all the predicted label in the shape of the image
+    Create an mask array using the two labels image.
+    
+    Parameters
+    ----------
+    
+    pred_mask: arrays
+      n_classes arrays predicted by the model
+      
+      
+    Returns
+    -------
+    
+    pred_mask[0]: array
+      array containing all the predicted label in the shape of the image
     """
+    
     pred_mask = tf.argmax(pred_mask, axis=-1)
     pred_mask = pred_mask[..., tf.newaxis]
     return pred_mask
 
 def display(display_list):
     """
-        Display the image, the true label and the predicted one.
-        Inputs:
-            -display_list: list - contains the true image, the label and the predicted mask to display.
+    Display the image, the true label and the predicted one.
+    
+    Parameters
+    ----------
+    
+    display_list: list
+      contains the true image, the label and the predicted mask to display.
     """
     title = ['Input Image', 'True Mask', 'Predicted Mask']
     for i in range(len(display_list[0])):
@@ -66,11 +91,17 @@ def show_predictions(model: Model,
                      dataset: tf.data.Dataset,
                      num: int = 1):
     """
-        Show the predicted mask for a dataset.
-        Inputs:
-            -model: Tensorflow model - trained model to make the prediction
-            -dataset: Tensorflow dataset - dataset containing the image to predict mask
-            -num: integer - number of desired prediction from the dataset
+    Show the predicted mask for a dataset.
+    
+    Parameters
+    ----------
+    
+    model: Tensorflow model
+      trained model to make the prediction
+    dataset: Tensorflow dataset
+      dataset containing the image to predict mask
+    num: integer, optional
+      number of desired prediction from the dataset
     """
     i = 0
     for image, mask in dataset.take(1):
@@ -86,9 +117,16 @@ def to_rgb(img: np.array):
     If the number of channels is less than 3, the array is tiled such that it has 3 channels.
     If the number of channels is greater than 3, only the first 3 channels are used
 
-    :param img: the array to convert [bs, nx, ny, channels]
+    Parameters
+    ----------
+    
+    param img : numpy array
+      the array to convert [bs, nx, ny, channels]
 
-    :returns img: the rgb image [bs, nx, ny, 3]
+    Returns
+    -------
+    img: array
+      the rgb image [bs, nx, ny, 3]
     """
     img = img.astype(np.float32)
     img = np.atleast_3d(img)
@@ -110,73 +148,64 @@ def to_rgb(img: np.array):
     return img
 
 
-def predict_from_files(filelist, model, new_net=False, sat=False, Norm=False):
+def predict_from_files(filelist, model):
     """
-        Predict masks from a list of input images.
-        Inputs:
-            filelist:   list - contains the list of image to use for prediction
-            model:      keras model - model which predict the masks
-            new_net:    boolean - to either use the first database or the second
-        Outputs:
-            prediction: list - contains all the prediction with the correct shape
+    Predict masks from a list of input images.
+    
+    Parameters
+    ----------
+            
+    filelist:   list - contains the list of image to use for prediction
+    model:      keras model - model which predict the masks
+    
+    Returns
+    -------
+    
+    prediction: list
+      contains all the prediction with the correct shape
     """
     prediction = []
     tmp = []
     for img_ in filelist:
         if os.path.isfile(img_):
             img = np.load(img_)
-            #print(img.shape, len(img.shape))
             if len(img.shape) <3 :
                 prediction.append([])
                 print("error in img shape %s\n" % img_)
                 continue
             nsub = img.shape[1]
             nchan = img.shape[0]
-            
-            if new_net:
-                     tmp = np.zeros((nchan,nsub,3))
-                     if Norm:
-                              Normlist = "/work/aberther/codes/list_for_rfi/nuppitsubs.list"
-                              pftsub = ps.read_table(Normlist, sep="   ", header=0, engine='python')
-                              img = _normalize(img_, pftsub)
-                              tmp[:,:,0] = np.ma.log10(np.median(img, axis=2))
-                              tmp[:,:,1] = np.ma.log10(mad(img, axis=2))
-                              tmp[:,:,2] = np.ma.log10(np.ptp(img, axis=2))
-                              tmp = _input_shape(tmp)
-                              #print("we did this\n")
-                              #print(tmp.shape)
-                     #tmp = _input_shape(tmp)
-                     if sat:
-                              tmp[:,:,0] = np.ma.log10(np.median(img, axis=2))
-                              tmp[:,:,1] = np.ma.log10(mad(img, axis=2))
-                              tmp[:,:,2] = np.ma.log10(np.ptp(img, axis=2))
-                              tmp = _input_shape(tmp)
+            tmp = np.zeros((nchan,nsub,3))       
+            tmp[:,:,0] = np.ma.log10(np.median(img, axis=2))
+            tmp[:,:,1] = np.ma.log10(mad(img, axis=2))
+            tmp[:,:,2] = np.ma.log10(np.ptp(img, axis=2))
+            tmp = _input_shape(tmp)
       
-                     tmp =  preprocess_input(tmp)
-                     #print("preprocess ok\n")
-                     tmp = np.expand_dims(tmp, axis=0)
-                     print(tmp.shape)
-            else:
-                     tmp = _input_shape(img)
-                     tmp = preprocess_input(tmp)
-                     tmp = to_rgb(tmp)
-                     tmp = np.expand_dims(tmp, axis=0)
-        #print(tmp.shape)
+            tmp =  preprocess_input(tmp)
+            tmp = np.expand_dims(tmp, axis=0)
+
         pred = model.predict(tmp)
         prediction.append(create_mask(pred[0,:nchan,:nsub])[:,:,0])
-        #prediction.append((pred[0,:nchan,:nsub,:]))
     return prediction
 
 
 def predict_from_dir(dir_, model, new_net=False):
     """
-        Predict masks for file in the given directory
-        Inputs:
-            dir:        str - the path to the directory
-            model:      keras model - model which predict the masks
-            new_net:    boolean - to either use the first database or the second
-        Outputs:
-            prediction: list - contains all the prediction with the correct shape
+    Predict masks for file in the given directory
+    
+    Parameters
+    ----------
+     
+    dir_: str
+      the path to the directory
+    model: keras model
+      model which predict the masks
+    
+    Returns
+    -------
+    
+    prediction: list
+      contains all the prediction with the correct shape
     """
     tmp_img = []
     for img in listdir(dir_):
@@ -187,13 +216,22 @@ def predict_from_dir(dir_, model, new_net=False):
 
 def _input_shape(img):
     """
-        Reshape the arrays to make them divisible by 32. This shape is required by
-        the UNET architecture.
-        Inputs:
-            - img : array - the image or label array to be reshape.
-        Outputs:
-            - new_img : array - the reshaped array.
+    Reshape the arrays to make them divisible by 32. This shape is required by
+    the UNET architecture.
+    
+    Parameters
+    ----------
+    
+    img : array
+      the image or label array to be reshape.
+    
+    Returns
+    -------
+    
+    new_img : array
+      the reshaped array.
     """
+    #this value is required
     value = 32
     height = img.shape[0]
     width = img.shape[1]
@@ -213,61 +251,9 @@ def _input_shape(img):
         new_img[:height, :width, :] = img
     return new_img
 
-
-def apply_pred(model, num=1):
-
-        for image, mask in dt.take(1):
-            pred = model.predict(image)
-            pred_mask = create_mask(pred)
-            img = output_shape(image[0,:,:,:], shapes[index[0]])
-            msk = output_shape(mask[0,:,:,:], shapes[index[0]])
-            prd_msk = output_shape(pred_mask[0,:,:,:], shapes[index[0]])
-            #print(shapes[index[0]])
-            #print(generator.image_paths[index[0]])
-        return img, msk, prd_msk, mask
-
-
-def _scaling(batch, threshold=3):
-        scaler = MinMaxScaler(feature_range=(0.,255.), copy=False)
-        a_min = []
-        a_max = []
-        med_ = []
-        mad_ = []
-        p2p = []
-        for img in batch:
-            tmp = np.reshape(img, (-1,3))
-            med_.append(tmp[:,0])
-            mad_.append(tmp[:,1])
-            p2p.append(tmp[:,2])
-        tmp = [i for sublist in med_ for i in sublist]
-        a_min.append(np.mean(tmp)-threshold*np.std(tmp))
-        a_max.append(np.mean(tmp+threshold*np.std(tmp)))
-        #std_.append(np.std(tmp))
-        #mean_.append(np.mean(tmp))
-        tmp = [i for sublist in mad_ for i in sublist]
-        a_min.append(np.mean(tmp)-threshold*np.std(tmp))
-        a_max.append(np.mean(tmp+threshold*np.std(tmp)))
-        #std_.append(np.std(tmp))
-        #mean_.append(np.mean(tmp))
-        tmp = [i for sublist in p2p for i in sublist]
-        a_min.append(np.mean(tmp)-threshold*np.std(tmp))
-        a_max.append(np.mean(tmp+threshold*np.std(tmp)))
-        a_min = np.array(a_min)
-        a_max = np.array(a_max)
-        #std_.append(np.std(tmp))
-        #mean_.append(np.mean(tmp))
-        for img in batch:
-            np.clip(img,a_min,a_max)
-            img[:,:,0] = scaler.fit_transform(img[:,:,0])
-            img[:,:,1] = scaler.fit_transform(img[:,:,1])
-            img[:,:,2] = scaler.fit_transform(img[:,:,2])
-            img =  preprocess_input(img)
-        return batch
-
-
 def _normalize(filename, pftsub):
         """
-            Normalize the image sub integration time.
+        Normalize the image sub integration time.
             Inputs:
                 - filename : str - path to the array
                 - pftsub : pandas datafram - contains tsub value for all obs.
