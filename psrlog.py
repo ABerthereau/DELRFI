@@ -21,15 +21,20 @@ class ImageGenerator():
         """
             Initialize the generator with the directory where to find masks
             and spectrograms.
-            Inputs:
-                -imgs : List or Str - Either a list of string containing files
-                to use as images or the path to the full directory
-                -masks : List or Str - Same as the imgs, but for the mask labels
-                -batch_size : int - number of example per batch.
-                -shuffle : Boolean - to shuffle the batch at each epoch.
-                -max_dimension: int or tuple - the maximal dimension allowed to
-                your arrays. If None, max_dimension take the biggest size inside
-                the batch.
+            
+            Parameters
+            ----------
+            
+                -imgs : List or Str
+                    Either a list of string containing files to use as images or the path to the full directory
+                -masks : List or Str
+                    Same as the imgs, but for the mask labels
+                -batch_size : int, optional
+                    number of example per batch.
+                -shuffle : Boolean, optional
+                    to shuffle the batch at each epoch.
+                -max_dimension: int or tuple, optional
+                    the maximal dimension allowed to your arrays. If None, max_dimension take the biggest size inside the batch.
         """
 
 
@@ -48,25 +53,11 @@ class ImageGenerator():
             self._load_from_dir(imgs, masks)
         else:
             raise(TypeError("Error : imgs and masks are not list nor directories"))
-
-
-
-
-#        if prediction:
-#            self._prediction_preprocess(directory)
-#        else:
-#            self._training_preprocess(directory)
-
-
-
+            
         self.idx = np.arange(len(self.image_paths)).astype(int)
         self.batch_nb = batch_nb
         self.max_tsub = max_tsub
         print("Initialization of the generator")
-
-
-
-
 
     def _prediction_preprocess(self,directory):
          for _,class_dir in enumerate(listdir(directory)):
@@ -127,6 +118,9 @@ class ImageGenerator():
 
 
     def check_size(self):
+        """
+            Check the size of the images and masks list to ensure they are the same. If there is any difference or missed img/mask, the filename is stored into an errorfile.
+        """
         idx_to_save = []
         for i in range(len(self.image_paths)):
             img = np.load(self.image_paths[i])
@@ -145,20 +139,26 @@ class ImageGenerator():
             Load and preprocess the image array saved into numpy format. Arrays should
             be in the format [nchan, nsub, 1]. The output array has shape [nchan, nsub, 3]
             to be used by the MobileNetV2 as a transfert learning method.
-            Inputs:tu bluff
-                - img_path: string - path to the numpy array.
-            Outputs:
-                - img : numpy array - new array with scaled values.
+            
+            
+            Parameters
+            ----------
+                - img_path: string,
+                    path to the numpy array.
+            
+            Returns
+            -------
+                - img : numpy array
+                    new array with scaled values.
         """
         pftsub = ps.read_table(self.Normlist, sep="   ", header=0, engine='python')
-        img = self._normalize(img_path, pftsub)
+        img = np.load(img_path)
         nchan = img.shape[0]
         nsub = img.shape[1]
         max_dim = max(img.shape)
         #med, mad, p2p
         #include the generated rfi <3
         img_ = np.zeros((nchan,nsub,3))
-        #print(img.shape)
         if img.shape[2] ==3:
         #since it's generated data it's already have the correct 3 channels input
             img_[:,:,0] = np.ma.log10(img[...,0])
@@ -168,11 +168,8 @@ class ImageGenerator():
             img_[:,:,0] = np.ma.log10(np.median(img, axis=2))
             img_[:,:,1] = np.ma.log10(mad(img, axis=2))
             img_[:,:,2] = np.ma.log10(np.ptp(img, axis=2))
-        #print(np.min(img_[:,:,0]), np.min(img_[:,:,1]), np.min(img_[:,:,2]))
-        #print(np.max(img_[:,:,0]), np.max(img_[:,:,1]), np.max(img_[:,:,2]))
         img = self._input_shape(img_)
         img =  preprocess_input(img)
-        #print(img.shape)
         return img
 
     def _load_label_(self, label_path):
@@ -180,10 +177,18 @@ class ImageGenerator():
             Load and preprocess the label array saved into numpy format. Arrays should
             be in the format [nchan, nsub]. The output array has shape [nchan, nsub, 1]
             to be used by the MobileNetV2 as a transfert learning method.
-            Inputs:
-                - label_path: string - path to the numpy array.
-            Outputs:
-                - label : numpy array - new array with integer values between 0 and n_classes.
+            
+            Parameters
+            ----------
+            
+                - label_path: string
+                    path to the numpy array.
+            
+            Returns
+            -------
+            
+                - label : numpy array
+                    new array with integer values between 0 and n_classes.
         """
         img = np.load(label_path)
         img = self._input_shape(img)
@@ -199,10 +204,18 @@ class ImageGenerator():
         """
             Reshape the arrays to make them divisible by 32. This shape is required by
             the UNET architecture.
-            Inputs:
-                - img : array - the image or label array to be reshape.
-            Outputs:
-                - new_img : array - the reshaped array.
+            
+            Parameters
+            ----------
+            
+                - img : array 
+                the image or label array to be reshape.
+            
+            Returns
+            -------
+            
+                - new_img : array
+                    the reshaped array.
         """
         value = 32
         height = img.shape[0]
@@ -223,32 +236,18 @@ class ImageGenerator():
             new_img[:height, :width, :] = img
         return new_img
 
-    def _normalize(self, filename, pftsub):
-        """
-            Normalize the image sub integration time.
-            Inputs:
-                - filename : str - path to the array
-                - pftsub : pandas datafram - contains tsub value for all obs.
-            Output:
-                - img : array - float normalized numpy array
-        """
-        arr = np.load(filename)
-        name = filename.split('/')[-1]
-        name = name.split('.npy')[0]
-        tsub = pftsub.loc[pftsub['filename'] == name+'.ar']['tsub'].values
-        if tsub.size != 0:
-            img = arr / tsub
-        #input_image = tf.cast(input_image, tf.float64) / 255.0
-            return img
-        return arr
 
 
     def _pad_images(self, img, shape):
         """
             Pad the image with zeros into the input shape.
-            Inputs:
-                - img: array - numpy array of image or label to padding
+            
+            Parameters
+            ----------
+                - img: array
+                    numpy array of image or label to padding
                 - shape: tuple
+                    The wanted shape
         """
         if self.max_tsub :
             if shape[1]> self.max_tsub:
@@ -261,7 +260,6 @@ class ImageGenerator():
             img = np.pad(img,(*[((shape[i]-img.shape[i])//2, ((shape[i]-img.shape[i])//2) + ((shape[i]-img.shape[i])%2)) for i in range(2)], (0,0)), mode='constant', constant_values=0.)
         except ValueError:
             print(img.shape, shape)
-        #print(*[((shape[i]-img.shape[i])//2, ((shape[i]-img.shape[i])//2) + ((shape[i]-img.shape[i])%2)) for i in range(2)], (0,0))
         return img
 
 
@@ -298,7 +296,17 @@ class ImageGenerator():
 
 
     def check_files(self, labels, imgs):
-        #use pathlib.PurePosixPath(file).name
+        """
+            Check if the images and labels are matching.
+            
+            Parameters
+            ----------
+            
+                - labels : list(str)
+                    path of the labels 
+                - imgs : list(str)
+                    path of the images
+        """
         idx_lab = []
         idx_img = []
         self.filerrors = []
@@ -310,8 +318,7 @@ class ImageGenerator():
         for lab in labels:
             tmp_lab.append((PurePosixPath(lab).name).split("_cgmask.npy")[0])
         for i in range(len(tmp_img)):
-            #print(tmp_img[i])
-            #print(tmp_lab)
+
             if tmp_img[i] in tmp_lab:
                 idx_img.append(i)
             else:
@@ -321,12 +328,8 @@ class ImageGenerator():
                 idx_lab.append(i)
             else:
                 (self.filerrors).append([self.label_paths[i], (1,0)])
-        #print(len(self.image_paths), len(self.label_paths))
-
-        #print(len(idx_img), len(idx_lab))
         self.image_paths = np.array(self.image_paths)[idx_img]
         self.label_paths = np.array(self.label_paths)[idx_lab]
-        #print(len(self.image_paths), len(self.label_paths))
 
     
 
@@ -334,18 +337,16 @@ class ImageGenerator():
         if self.shuffle:
             np.random.shuffle(self.idx)
         for batch in range(len(self)):
-            #print(self.idx)
+
             batch_img_paths = self.image_paths[self.idx[batch*self.batch_size:(batch+1)*self.batch_size]]
-            #print(batch_img_paths)
             batch_images = [self._load_image_(image_path) for image_path in batch_img_paths]
-            #batch_images = self._scaling(batch_images,3)
+
 
             max_resolution = tuple((max(img.shape[i] for img in batch_images) for i in range(2)))
             batch_images = np.array([self._pad_images(image, max_resolution) for image in batch_images])
 
             batch_label_paths = self.label_paths[self.idx[batch*self.batch_size:(batch+1)*self.batch_size]]
 
-            #print(batch_label_paths)
             batch_labels_ = [self._load_label_(label_path) for label_path in batch_label_paths]
             batch_labels = np.array([self._pad_images(label, max_resolution) for label in batch_labels_])
 
