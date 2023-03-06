@@ -3,7 +3,6 @@ from os import path, listdir
 from utils import to_rgb
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2,preprocess_input
 from scipy.stats import median_absolute_deviation as mad
-#from utils import resize
 from pathlib import PurePosixPath
 import pandas as ps
 import statistics as sts
