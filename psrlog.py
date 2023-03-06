@@ -43,7 +43,6 @@ class ImageGenerator():
         self.image_paths = []
         self.input_shapes = []
         self.check_file = check_file
-        self.Normlist = "/work/aberther/codes/list_for_rfi/nuppitsubs.list"
 
         if (isinstance(imgs, list) or isinstance(imgs, np.ndarray)) and \
            (isinstance(masks, list) or isinstance(masks, np.ndarray)):
@@ -150,7 +149,6 @@ class ImageGenerator():
                 - img : numpy array
                     new array with scaled values.
         """
-        pftsub = ps.read_table(self.Normlist, sep="   ", header=0, engine='python')
         img = np.load(img_path)
         nchan = img.shape[0]
         nsub = img.shape[1]
