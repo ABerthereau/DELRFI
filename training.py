@@ -13,7 +13,7 @@ import utils
 import segnet
 import psrlog as psg
 from callbacks import DisplayCallback
-from metrics_cm import ConfusionMatrixMetric
+from metrics import ConfusionMatrixMetric
 
 
 # simple way to add weight to class
