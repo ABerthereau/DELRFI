@@ -22,7 +22,12 @@ Download/close this repository, you can find in the table below a small descript
 #### load model
 
 You can load the already trained model by using this line :
-
-model = keras.models.load_model("./saved_net", custom_objects={'ConfusionMatrixMetric':MeanIOU(2)})
-
+```python
+model = keras.models.load_model("./saved_net", custom_objects={'ConfusionMatrixMetric':ConfusionMatrixMetric(2)})
+```
 Disclaimer : this model has been trained with Nançay observations and may give you different results. It is recommended to train again the network with your own data. To do so, please refer to the data processing section.
+
+#### data processing
+
+To use your own data with the network, you will need to either use psrchive with python3 or prepreprocess your observations. The network use dynamic spectrum with 3 channels : median(bins), median_absolute_deviation(bins), peak_to_peak(bins). These transformations are made by the datagerenator but it will require that you have observations saved in a numpy array format with shape (nsub,nchan,nbins). 
+
