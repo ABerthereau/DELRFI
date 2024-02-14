@@ -24,6 +24,8 @@ def add_sample_w(img,label):
     return img,label,sw
 
 n_classes = 2
+
+# small batch size for limited RAM, otherwise you can reduce the batch_nb & increase the batch_size
 batch_size = 4
 max_dimension = None
 max_tsub = False
@@ -31,13 +33,13 @@ batch_nb = 4700
 
 epochs = 30
 
-log_dir = "./dataset_2/last_net" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+log_dir = "./data/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 #filelist containing the files used for each dataset
-Img1 = np.loadtxt("./dataset_2/x_train", dtype="str")
-Img2 = np.loadtxt("./dataset_2/x_val", dtype="str")
-Mask1 = np.loadtxt("./dataset_2/y_train", dtype="str")
-Mask2 = np.loadtxt("./dataset_2/y_val", dtype="str")
+Img1 = np.loadtxt("./data/x_train", dtype="str")
+Img2 = np.loadtxt("./data/x_val", dtype="str")
+Mask1 = np.loadtxt("./data/y_train", dtype="str")
+Mask2 = np.loadtxt("./data/y_val", dtype="str")
 
 
 #train and validation generator 
