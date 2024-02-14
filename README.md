@@ -1,6 +1,6 @@
 # DELRFI
 Deep Learning RFI mitigation code.
-This repository contains the deep learning method used in the paper [paper name](paperlink) and the trained weights.
+This repository contains the deep learning method used in the paper [Deep learning for RFI mitigation of Nançay data and its impact on pulsar timing](https://www.ursi.org/proceedings/procAT22/ATAPRASC2022-papers/QZW50A94Z5.pdf) and the trained weights.
 
 The network architecture is a U-net using the mobileNetV2 as features extractor. The data used for trains, validations and tests are pulsar observations from the Nançay radio telescope in France.
 
